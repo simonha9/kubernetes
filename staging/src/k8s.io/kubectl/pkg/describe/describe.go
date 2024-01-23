@@ -2341,6 +2341,9 @@ func describeJob(job *batchv1.Job, events *corev1.EventList) (string, error) {
 		if job.Spec.CompletionMode != nil && *job.Spec.CompletionMode == batchv1.IndexedCompletion {
 			w.Write(LEVEL_0, "Completed Indexes:\t%s\n", capIndexesListOrNone(job.Status.CompletedIndexes, 50))
 		}
+		w.Write(LEVEL_0, "Suspend:\t%s\n", printBoolPtr(job.Spec.Suspend))
+		printLabelsMultiline(w, "Node-Selectors", job.Spec.NodeSelector)
+		printPodTolerationsMultiline(w, "Tolerations", job.Spec.Tolerations)
 		DescribePodTemplate(&job.Spec.Template, w)
 		if events != nil {
 			DescribeEvents(events, w)

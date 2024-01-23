@@ -346,10 +346,22 @@ type JobSpec struct {
 	// +optional
 	ManualSelector *bool `json:"manualSelector,omitempty" protobuf:"varint,5,opt,name=manualSelector"`
 
+	// NodeSelector is a selector which must be true for the pod to fit on a node.
+	// Selector which must match a node's labels for the pod to be scheduled on that node.
+	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+	// +optional
+	// +mapType=atomic
+	NodeSelector map[string]string `json:"nodeSelector,omitempty" protobuf:"bytes,7,rep,name=nodeSelector"`
+
 	// Describes the pod that will be created when executing a job.
 	// The only allowed template.spec.restartPolicy values are "Never" or "OnFailure".
 	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/
 	Template corev1.PodTemplateSpec `json:"template" protobuf:"bytes,6,opt,name=template"`
+
+	// If specified, the pod's tolerations.
+	// +optional
+	// +listType=atomic
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty" protobuf:"bytes,22,opt,name=tolerations"`
 
 	// ttlSecondsAfterFinished limits the lifetime of a Job that has finished
 	// execution (either Complete or Failed). If this field is set,
