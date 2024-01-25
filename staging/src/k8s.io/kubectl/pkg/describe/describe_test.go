@@ -2263,6 +2263,8 @@ func TestDescribeDeployment(t *testing.T) {
 				"OldReplicaSets:  <none>",
 				"NewReplicaSet:   bar-001 (1/1 replicas created)",
 				"Events:          <none>",
+				"Node-Selectors:  <none>",
+				"Tolerations:     <none>",
 			},
 		},
 		{
@@ -2845,7 +2847,8 @@ func TestDescribeJob(t *testing.T) {
 	indexedCompletion := batchv1.IndexedCompletion
 	cases := map[string]struct {
 		job                  *batchv1.Job
-		wantCompletedIndexes string
+		wantElements		 []string
+		dontWantElements	 []string
 	}{
 		"not indexed": {
 			job: &batchv1.Job{
@@ -2898,23 +2901,35 @@ func TestDescribeJob(t *testing.T) {
 			},
 			wantCompletedIndexes: "0-5,7,9,10,12,13,15,16,18,20,21,23,24,26,27,29,30,32-34,...",
 		},
-		"node-selector": {
+		"suspend set to true": {
 			job: &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "bar",
 					Namespace: "foo",
 				},
 				Spec: batchv1.JobSpec{
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							NodeSelector: map[string]string{
-								"foo": "bar",
-							},
-						},
-					},
+					Suspend:                 ptr.To(true),
+					TTLSecondsAfterFinished: ptr.To(int32(123)),
+					BackoffLimit:            ptr.To(int32(1)),
 				},
 			},
+			wantElements: []string{
+				"Suspend:                     true",
+				"TTL Seconds After Finished:  123",
+				"Backoff Limit:               1",
+			},
 		},
+		"suspend set to false": {
+			job: &batchv1.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "bar",
+					Namespace: "foo",
+				},
+				Spec: batchv1.JobSpec{
+					Suspend: ptr.To(false),
+				},
+			},
+			wantElements: []string{"Suspend:        false"},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {

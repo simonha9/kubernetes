@@ -2212,6 +2212,8 @@ func DescribePodTemplate(template *corev1.PodTemplateSpec, w PrefixWriter) {
 	if len(template.Spec.PriorityClassName) > 0 {
 		w.Write(LEVEL_1, "Priority Class Name:\t%s\n", template.Spec.PriorityClassName)
 	}
+	printLabelsMultiline(w, "  Node-Selectors", template.Spec.NodeSelector)
+	printPodTolerationsMultiline(w, "  Tolerations", template.Spec.Tolerations)
 }
 
 // ReplicaSetDescriber generates information about a ReplicaSet and the pods it has created.
@@ -2341,9 +2343,15 @@ func describeJob(job *batchv1.Job, events *corev1.EventList) (string, error) {
 		if job.Spec.CompletionMode != nil && *job.Spec.CompletionMode == batchv1.IndexedCompletion {
 			w.Write(LEVEL_0, "Completed Indexes:\t%s\n", capIndexesListOrNone(job.Status.CompletedIndexes, 50))
 		}
-		w.Write(LEVEL_0, "Suspend:\t%s\n", printBoolPtr(job.Spec.Suspend))
-		printLabelsMultiline(w, "Node-Selectors", job.Spec.NodeSelector)
-		printPodTolerationsMultiline(w, "Tolerations", job.Spec.Tolerations)
+		if job.Spec.Suspend != nil {
+			w.Write(LEVEL_0, "Suspend:\t%s\n", printBoolPtr(job.Spec.Suspend))
+		}
+		if job.Spec.TTLSecondsAfterFinished != nil {
+			w.Write(LEVEL_0, "TTL Seconds After Finished:\t%d\n", *job.Spec.TTLSecondsAfterFinished)
+		}
+		if job.Spec.BackoffLimit != nil {
+			w.Write(LEVEL_0, "Backoff Limit:\t%d\n", *job.Spec.BackoffLimit)
+		}
 		DescribePodTemplate(&job.Spec.Template, w)
 		if events != nil {
 			DescribeEvents(events, w)
