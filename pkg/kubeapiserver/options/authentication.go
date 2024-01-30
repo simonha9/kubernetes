@@ -271,6 +271,13 @@ func (o *BuiltInAuthenticationOptions) Validate() []error {
 		allErrors = append(allErrors, o.RequestHeader.Validate()...)
 	}
 
+	if o.ClientCert != nil {
+		clientCA := strings.TrimSpace(o.ClientCert.ClientCAFile)
+		requestHeaderCA := strings.TrimSpace(o.RequestHeader.ClientCAFile)
+		if len(clientCA) != 0 && clientCA == requestHeaderCA && len(o.RequestHeader.AllowedNames) == 0 {
+			allErrors = append(allErrors, fmt.Errorf("client-ca-file and requestheader-client-ca-file cannot be the same file if requestheader-allowed-names is not set"))
+		}
+
 	return allErrors
 }
 
